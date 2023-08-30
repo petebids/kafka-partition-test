@@ -1,8 +1,13 @@
 package com.example.kafkapartitiontest;
 
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.UUID;
@@ -29,7 +34,6 @@ public class TestPartitionAllocation {
                 .mockTopic(() -> orders.pop().type().toString(), 10, 1_000_000);
 
         Map<Integer, Integer> summary = mockKafkaTopic.getSummary();
-
 
         assertEquals(summary.get(0), 0);
         assertEquals(summary.get(1), 0);
@@ -58,18 +62,18 @@ public class TestPartitionAllocation {
 
         Map<Integer, Integer> summary = mockKafkaTopic.getSummary();
 
-        //{0=70291, 1=130089, 2=80153, 3=39853, 4=69583, 5=150634, 6=180126, 7=69353, 8=70051, 9=139867}
 
-        assertThat(summary.get(0), allOf(greaterThan(70_000), lessThan(80_000)));
-        assertThat(summary.get(1), allOf(greaterThan(130_000), lessThan(140_000)));
-        assertThat(summary.get(2), allOf(greaterThan(70_000), lessThan(80_000)));
-        assertThat(summary.get(3), allOf(greaterThan(30_000), lessThan(40_000)));
-        assertThat(summary.get(4), allOf(greaterThan(60_000), lessThan(80_000)));
+
+        assertThat(summary.get(0), allOf(greaterThan(45_000), lessThan(65_000)));
+        assertThat(summary.get(1), allOf(greaterThan(145_000), lessThan(160_000)));
+        assertThat(summary.get(2), allOf(greaterThan(85_000), lessThan(100_000)));
+        assertThat(summary.get(3), allOf(greaterThan(38_000), lessThan(45_000)));
+        assertThat(summary.get(4), allOf(greaterThan(110_00), lessThan(130_000)));
         assertThat(summary.get(5), allOf(greaterThan(130_000), lessThan(180_000)));
-        assertThat(summary.get(6), allOf(greaterThan(150_000), lessThan(200_000)));
-        assertThat(summary.get(7), allOf(greaterThan(55_000), lessThan(85_000)));
-        assertThat(summary.get(8), allOf(greaterThan(70_000), lessThan(80_000)));
-        assertThat(summary.get(9), allOf(greaterThan(130_000), lessThan(140_000)));
+        assertThat(summary.get(6), allOf(greaterThan(55_000), lessThan(65_000)));
+        assertThat(summary.get(7), allOf(greaterThan(90_000), lessThan(115_000)));
+        assertThat(summary.get(8), allOf(greaterThan(120_000), lessThan(150_000)));
+        assertThat(summary.get(9), allOf(greaterThan(85_000), lessThan(100_000)));
 
 
 
@@ -85,13 +89,12 @@ public class TestPartitionAllocation {
 
         Stack<Order> orders = mockOrderFactory.generateWeightedOrders(1_000_000);
 
+
+
         MockKafkaTopic mockKafkaTopic = MockTopicGenerator
                 .mockTopic(() -> orders.pop().orderId().toString(), 10, 1_000_000);
 
         Map<Integer, Integer> summary = mockKafkaTopic.getSummary();
-
-
-        System.out.println(summary);
 
 
         assertThat(summary.get(0), allOf(greaterThan(99_000), lessThan(101_000)));
@@ -108,6 +111,7 @@ public class TestPartitionAllocation {
     }
 
 
+    @SneakyThrows
     private static MockOrderFactory getMockOrderFactory() {
         WeightedCollection<OrderType> orderTypeWeightedCollection = new WeightedCollection<>();
 
@@ -116,7 +120,12 @@ public class TestPartitionAllocation {
 
         WeightedCollection<UUID> customerIdWeight = new WeightedCollection<>();
 
-        IntStream.range(0, 100).forEach(uuid -> customerIdWeight.add(1, UUID.randomUUID()));
+
+        List<String> customerIds = Files.readAllLines(Paths.get("uuids.txt"));
+
+
+        IntStream.range(0, 100).forEach(i -> customerIdWeight.add(1, UUID.fromString(customerIds.get(i))));
+
 
         MockOrderFactory mockOrderFactory = new MockOrderFactory(orderTypeWeightedCollection, customerIdWeight);
         return mockOrderFactory;

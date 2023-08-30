@@ -8,7 +8,6 @@ import java.util.stream.IntStream;
 
 public class MockTopicGenerator {
 
-
     public static MockKafkaTopic mockTopic(Supplier<String> partitionKeySupplier, int partitionCount, int iterations) {
 
         MockKafkaTopic mockKafkaTopic = new MockKafkaTopic(partitionCount);
